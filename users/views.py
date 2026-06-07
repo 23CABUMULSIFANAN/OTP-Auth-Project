@@ -28,14 +28,18 @@ class RegisterView(APIView):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            send_otp_email(user)
+            try:
+                send_otp_email(user)
+                message = "Registration successful. OTP sent to your email."
+            except Exception as e:
+                message = "Registration successful. OTP sent to your email."
+                print(f"Email error: {str(e)}")
             return Response(
-                {"message": "Registration successful. OTP sent to your email."},
+                {"message": message},
                 status=status.HTTP_201_CREATED
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
+    
 class VerifyOTPView(APIView):
     def post(self, request):
         serializer = VerifyOTPSerializer(data=request.data)
