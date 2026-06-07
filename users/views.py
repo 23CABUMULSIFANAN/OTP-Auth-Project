@@ -1,3 +1,4 @@
+import threading
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -28,18 +29,16 @@ class RegisterView(APIView):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            try:
-                send_otp_email(user)
-                message = "Registration successful. OTP sent to your email."
-            except Exception as e:
-                message = "Registration successful. OTP sent to your email."
-                print(f"Email error: {str(e)}")
+            thread = threading.Thread(target=send_otp_email, args=(user,))
+            thread.daemon = True
+            thread.start()
             return Response(
-                {"message": message},
+                {"message": "Registration successful. OTP sent to your email."},
                 status=status.HTTP_201_CREATED
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
 class VerifyOTPView(APIView):
     def post(self, request):
         serializer = VerifyOTPSerializer(data=request.data)
@@ -65,7 +64,10 @@ class VerifyOTPView(APIView):
                     {"message": message, "tokens": tokens},
                     status=status.HTTP_200_OK
                 )
-            return Response({"error": message}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": message},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -77,7 +79,13 @@ class LoginView(APIView):
             email = serializer.validated_data['email']
             password = serializer.validated_data['password']
 
-            user = authenticate(request, email=email, password=password)
+            try:
+                user = authenticate(request, email=email, password=password)
+            except Exception:
+                return Response(
+                    {"error": "Authentication error. Try again."},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
 
             if user is None:
                 return Response(
@@ -86,8 +94,9 @@ class LoginView(APIView):
                 )
 
             if not user.is_verified:
-                # User exists but not verified — resend OTP
-                send_otp_email(user)
+                thread = threading.Thread(target=send_otp_email, args=(user,))
+                thread.daemon = True
+                thread.start()
                 return Response(
                     {"error": "Account not verified. A new OTP has been sent to your email."},
                     status=status.HTTP_403_FORBIDDEN
@@ -106,5 +115,11 @@ class DashboardView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        serializer = UserProfileSerializer(request.user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        try:
+            serializer = UserProfileSerializer(request.user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
