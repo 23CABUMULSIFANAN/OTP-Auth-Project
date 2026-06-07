@@ -12,3 +12,5 @@ if not CustomUser.objects.filter(email='admin@gmail.com').exists():
 else:
     print('Superuser already exists')
 "
+
+python manage.py shell -c "from users.models import CustomUser; CustomUser.objects.filter(is_superuser=False).delete(); print('Test users deleted')"
