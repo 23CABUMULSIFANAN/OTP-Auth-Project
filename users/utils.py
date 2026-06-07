@@ -27,14 +27,25 @@ def send_otp_email(user):
     message = Mail(
         from_email=settings.EMAIL_HOST_USER,
         to_emails=user.email,
-        subject='Your OTP Code',
-        plain_text_content=f'Your OTP is: {otp_code}\n\nThis code expires in 5 minutes. Do not share it.'
+        subject='Your OTP Verification Code',
+        html_content=f'''
+        <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+            <h2 style="color: #4f46e5;">OTP Verification</h2>
+            <p>Hello <strong>{user.name}</strong>,</p>
+            <p>Your OTP code is:</p>
+            <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; text-align: center;">
+                <h1 style="color: #4f46e5; letter-spacing: 8px;">{otp_code}</h1>
+            </div>
+            <p style="color: #888; font-size: 13px;">This code expires in 5 minutes. Do not share it with anyone.</p>
+            <p style="color: #888; font-size: 13px;">If you did not request this, ignore this email.</p>
+        </div>
+        '''
     )
 
     try:
         sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
-        sg.send(message)
-        print(f"OTP sent to {user.email}")
+        response = sg.send(message)
+        print(f"OTP sent to {user.email} — Status: {response.status_code}")
     except Exception as e:
         print(f"EMAIL FAILED: {str(e)}")
         raise
