@@ -60,7 +60,7 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",        # React local dev
-    "https://your-app.vercel.app",  # update this after Vercel deploy
+    "https://otp-auth-frontend.vercel.app/", 
 ]
 CORS_ALLOW_ALL_ORIGINS = True
 ROOT_URLCONF = 'core.urls'
