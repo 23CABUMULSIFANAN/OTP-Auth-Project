@@ -1,8 +1,9 @@
 import random
 from django.utils import timezone
 from datetime import timedelta
-from django.core.mail import send_mail
 from django.conf import settings
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 from .models import OTPToken
 
 
@@ -11,16 +12,11 @@ def generate_otp():
 
 
 def send_otp_email(user):
-    # Delete any old unused OTPs for this user before creating new one
     OTPToken.objects.filter(user=user, is_used=False).delete()
 
-    # Generate new OTP
     otp_code = generate_otp()
-
-    # Set expiry to 5 minutes from now
     expires_at = timezone.now() + timedelta(minutes=5)
 
-    # Save OTP to database
     OTPToken.objects.create(
         user=user,
         otp_code=otp_code,
@@ -28,14 +24,20 @@ def send_otp_email(user):
         is_used=False
     )
 
-    # Send email
-    send_mail(
-        subject="Your OTP Code",
-        message=f"Your OTP is: {otp_code}\n\nThis code expires in 5 minutes. Do not share it with anyone.",
+    message = Mail(
         from_email=settings.EMAIL_HOST_USER,
-        recipient_list=[user.email],
-        fail_silently=False,
+        to_emails=user.email,
+        subject='Your OTP Code',
+        plain_text_content=f'Your OTP is: {otp_code}\n\nThis code expires in 5 minutes. Do not share it.'
     )
+
+    try:
+        sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
+        sg.send(message)
+        print(f"OTP sent to {user.email}")
+    except Exception as e:
+        print(f"EMAIL FAILED: {str(e)}")
+        raise
 
 
 def verify_otp(user, otp_code):
@@ -48,11 +50,9 @@ def verify_otp(user, otp_code):
     except OTPToken.DoesNotExist:
         return False, "Invalid OTP"
 
-    # Check if expired
     if timezone.now() > otp.expires_at:
         return False, "OTP has expired"
 
-    # Mark as used so it cannot be reused
     otp.is_used = True
     otp.save()
 
