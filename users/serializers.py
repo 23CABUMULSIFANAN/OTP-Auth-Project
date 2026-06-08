@@ -9,6 +9,15 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ['name', 'email', 'phone', 'password']
 
+    def validate_phone(self, value):
+        # Remove hyphens and spaces automatically
+        value = value.replace('-', '').replace(' ', '')
+        if not value.isdigit():
+            raise serializers.ValidationError("Phone number must contain only digits.")
+        if len(value) < 10:
+            raise serializers.ValidationError("Phone number must be at least 10 digits.")
+        return value
+
     def create(self, validated_data):
         user = CustomUser.objects.create_user(
             email=validated_data['email'],
