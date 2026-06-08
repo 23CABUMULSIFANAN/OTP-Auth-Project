@@ -41,4 +41,4 @@ class LoginSerializer(serializers.Serializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['id', 'name', 'email', 'phone', 'is_verified', 'created_at']
+        fields = ['id', 'name', 'email', 'phone', 'role', 'is_verified', 'created_at']

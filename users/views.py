@@ -14,6 +14,9 @@ from .serializers import (
     UserProfileSerializer
 )
 from .utils import send_otp_email, verify_otp
+from .permissions import IsAdminRole, IsAdminOrUser
+
+from rest_framework.permissions import IsAuthenticated
 
 
 def get_tokens_for_user(user):
@@ -123,3 +126,74 @@ class DashboardView(APIView):
                 {"error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        
+
+class UserDashboardView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminOrUser]
+
+    def get(self, request):
+        if request.user.role == 'admin':
+            # Admin sees all users
+            users = CustomUser.objects.all().order_by('-created_at')
+            serializer = UserProfileSerializer(users, many=True)
+            return Response({
+                "role": "admin",
+                "total_users": users.count(),
+                "users": serializer.data
+            }, status=status.HTTP_200_OK)
+        else:
+            # Normal user sees only their own profile
+            serializer = UserProfileSerializer(request.user)
+            return Response({
+                "role": "user",
+                "profile": serializer.data
+            }, status=status.HTTP_200_OK)
+
+
+class PropertyView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Both admin and user can view properties
+        return Response({
+            "message": "Properties fetched successfully",
+            "role": request.user.role,
+            "can_manage": request.user.role == 'admin'
+        }, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        # Only admin can add properties
+        if request.user.role != 'admin':
+            return Response(
+                {"error": "You don't have permission to add properties. Admin access required."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return Response(
+            {"message": "Property added successfully"},
+            status=status.HTTP_201_CREATED
+        )
+
+    def delete(self, request):
+        # Only admin can delete properties
+        if request.user.role != 'admin':
+            return Response(
+                {"error": "You don't have permission to delete properties. Admin access required."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return Response(
+            {"message": "Property deleted successfully"},
+            status=status.HTTP_200_OK
+        )
+
+
+class AllUsersView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminRole]
+
+    def get(self, request):
+        # Only admin can see all users
+        users = CustomUser.objects.filter(role='user').order_by('-created_at')
+        serializer = UserProfileSerializer(users, many=True)
+        return Response({
+            "total_users": users.count(),
+            "users": serializer.data
+        }, status=status.HTTP_200_OK)

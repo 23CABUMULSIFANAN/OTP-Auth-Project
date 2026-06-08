@@ -8,37 +8,32 @@ class CustomUserAdmin(admin.ModelAdmin):
         'name',
         'email',
         'phone',
+        'role',          # ← add this
         'is_verified',
         'is_active',
-        'is_staff',
         'created_at',
         'last_login'
     ]
     list_filter = [
+        'role',          # ← add this
         'is_verified',
         'is_active',
-        'is_staff',
     ]
-    search_fields = [
-        'name',
-        'email',
-        'phone'
-    ]
+    search_fields = ['name', 'email', 'phone']
     ordering = ['-created_at']
     readonly_fields = ['created_at', 'last_login']
     fieldsets = [
         ('Personal Information', {
             'fields': ['name', 'email', 'phone']
         }),
-        ('Account Status', {
-            'fields': ['is_verified', 'is_active', 'is_staff', 'is_superuser']
+        ('Role & Status', {
+            'fields': ['role', 'is_verified', 'is_active', 'is_staff', 'is_superuser']
         }),
         ('Important Dates', {
             'fields': ['created_at', 'last_login']
         }),
     ]
     list_per_page = 20
-
 
 @admin.register(OTPToken)
 class OTPTokenAdmin(admin.ModelAdmin):

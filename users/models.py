@@ -20,11 +20,17 @@ class CustomUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-
 class CustomUser(AbstractBaseUser, PermissionsMixin):
+    
+    ROLE_CHOICES = [
+        ('user', 'User'),
+        ('admin', 'Admin'),
+    ]
+    
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=15)  # ← removed unique=True
+    phone = models.CharField(max_length=15)
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')  # ← add this
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -36,8 +42,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     objects = CustomUserManager()
 
     def __str__(self):
-        return self.email
-
+        return f"{self.email} ({self.role})"
 
 class OTPToken(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='otps')
