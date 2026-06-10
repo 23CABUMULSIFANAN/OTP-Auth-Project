@@ -8,7 +8,8 @@ from .views import (
     PropertyView,
     AllUsersView,
     SavePropertyView,
-    GetSavedPropertiesView
+    GetSavedPropertiesView,
+    UserPropertyView
 )
 
 urlpatterns = [
@@ -21,4 +22,5 @@ urlpatterns = [
     path('all-users/', AllUsersView.as_view(), name='all-users'),
     path('save-property/', SavePropertyView.as_view(), name='save-property'),
     path('saved-properties/', GetSavedPropertiesView.as_view(), name='saved-properties'),
+    path('user-properties/', UserPropertyView.as_view(), name='user-properties'),
 ]

@@ -57,3 +57,12 @@ class SavedPropertyAdmin(admin.ModelAdmin):
     list_display = ['user', 'title', 'location', 'price', 'saved_at']
     search_fields = ['user__email', 'title']
     ordering = ['-saved_at']
+
+from .models import UserProperty
+
+@admin.register(UserProperty)
+class UserPropertyAdmin(admin.ModelAdmin):
+    list_display = ['user', 'title', 'location', 'price', 'property_type', 'status', 'created_at']
+    list_filter = ['status', 'property_type']
+    search_fields = ['user__email', 'title', 'location']
+    ordering = ['-created_at']

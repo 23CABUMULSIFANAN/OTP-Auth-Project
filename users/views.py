@@ -262,3 +262,72 @@ class GetSavedPropertiesView(APIView):
             "saved_at": s.saved_at
         } for s in saved]
         return Response({"saved_properties": data}, status=status_code.HTTP_200_OK)
+    
+from .models import UserProperty
+
+class UserPropertyView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # User sees only their own properties
+        if request.user.role == 'admin':
+            properties = UserProperty.objects.all().order_by('-created_at')
+        else:
+            properties = UserProperty.objects.filter(user=request.user).order_by('-created_at')
+        
+        data = [{
+            "id": p.id,
+            "title": p.title,
+            "location": p.location,
+            "price": p.price,
+            "property_type": p.property_type,
+            "status": p.status,
+            "beds": p.beds,
+            "baths": p.baths,
+            "sqft": p.sqft,
+            "image_url": p.image_url,
+            "created_at": str(p.created_at),
+            "owner": p.user.email
+        } for p in properties]
+
+        return Response({"properties": data}, status=status_code.HTTP_200_OK)
+
+    def post(self, request):
+        # Any logged in user can add property
+        UserProperty.objects.create(
+            user=request.user,
+            title=request.data.get('title'),
+            location=request.data.get('location'),
+            price=request.data.get('price'),
+            property_type=request.data.get('property_type'),
+            status=request.data.get('status'),
+            beds=request.data.get('beds', 0),
+            baths=request.data.get('baths', 1),
+            sqft=request.data.get('sqft'),
+            image_url=request.data.get('image_url', '')
+        )
+        return Response(
+            {"message": "Property added successfully"},
+            status=status_code.HTTP_201_CREATED
+        )
+
+    def delete(self, request):
+        property_id = request.data.get('id')
+        try:
+            prop = UserProperty.objects.get(id=property_id)
+            # Only owner or admin can delete
+            if prop.user != request.user and request.user.role != 'admin':
+                return Response(
+                    {"error": "You don't have permission to delete this property"},
+                    status=status_code.HTTP_403_FORBIDDEN
+                )
+            prop.delete()
+            return Response(
+                {"message": "Property deleted"},
+                status=status_code.HTTP_200_OK
+            )
+        except UserProperty.DoesNotExist:
+            return Response(
+                {"error": "Property not found"},
+                status=status_code.HTTP_404_NOT_FOUND
+            )

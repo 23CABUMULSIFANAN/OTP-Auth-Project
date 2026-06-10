@@ -69,3 +69,31 @@ class SavedProperty(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.title}"
+    
+class UserProperty(models.Model):
+    STATUS_CHOICES = [
+        ('For Sale', 'For Sale'),
+        ('For Rent', 'For Rent'),
+    ]
+    TYPE_CHOICES = [
+        ('Apartment', 'Apartment'),
+        ('Villa', 'Villa'),
+        ('Commercial', 'Commercial'),
+        ('Penthouse', 'Penthouse'),
+        ('Plot', 'Plot'),
+    ]
+
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='properties')
+    title = models.CharField(max_length=200)
+    location = models.CharField(max_length=200)
+    price = models.CharField(max_length=100)
+    property_type = models.CharField(max_length=50, choices=TYPE_CHOICES)
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES)
+    beds = models.IntegerField(default=0)
+    baths = models.IntegerField(default=1)
+    sqft = models.CharField(max_length=50)
+    image_url = models.URLField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.email} - {self.title}"
