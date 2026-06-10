@@ -18,7 +18,7 @@ from .permissions import IsAdminRole, IsAdminOrUser
 
 from rest_framework.permissions import IsAuthenticated
 
-
+from rest_framework import status as status_code
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
     return {
@@ -197,3 +197,68 @@ class AllUsersView(APIView):
             "total_users": users.count(),
             "users": serializer.data
         }, status=status.HTTP_200_OK)
+    
+    
+from .models import SavedProperty
+
+class SavePropertyView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # Save a property
+        property_id = request.data.get('property_id')
+        title = request.data.get('title')
+        location = request.data.get('location')
+        price = request.data.get('price')
+        status = request.data.get('status')
+        image = request.data.get('image')
+
+        if SavedProperty.objects.filter(user=request.user, property_id=property_id).exists():
+            return Response(
+                {"message": "Already saved"},
+                status=status_code.HTTP_200_OK
+            )
+
+        SavedProperty.objects.create(
+            user=request.user,
+            property_id=property_id,
+            title=title,
+            location=location,
+            price=price,
+            status=status,
+            image=image
+        )
+        return Response(
+            {"message": "Property saved successfully"},
+            status=status_code.HTTP_201_CREATED
+        )
+
+    def delete(self, request):
+        # Unsave a property
+        property_id = request.data.get('property_id')
+        SavedProperty.objects.filter(
+            user=request.user,
+            property_id=property_id
+        ).delete()
+        return Response(
+            {"message": "Property removed from saved"},
+            status=status_code.HTTP_200_OK
+        )
+
+
+class GetSavedPropertiesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Only returns THIS user's saved properties
+        saved = SavedProperty.objects.filter(user=request.user).order_by('-saved_at')
+        data = [{
+            "property_id": s.property_id,
+            "title": s.title,
+            "location": s.location,
+            "price": s.price,
+            "status": s.status,
+            "image": s.image,
+            "saved_at": s.saved_at
+        } for s in saved]
+        return Response({"saved_properties": data}, status=status_code.HTTP_200_OK)

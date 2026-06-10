@@ -6,7 +6,9 @@ from .views import (
     DashboardView,
     UserDashboardView,
     PropertyView,
-    AllUsersView
+    AllUsersView,
+    SavePropertyView,
+    GetSavedPropertiesView
 )
 
 urlpatterns = [
@@ -17,4 +19,6 @@ urlpatterns = [
     path('user-dashboard/', UserDashboardView.as_view(), name='user-dashboard'),
     path('properties/', PropertyView.as_view(), name='properties'),
     path('all-users/', AllUsersView.as_view(), name='all-users'),
+    path('save-property/', SavePropertyView.as_view(), name='save-property'),
+    path('saved-properties/', GetSavedPropertiesView.as_view(), name='saved-properties'),
 ]

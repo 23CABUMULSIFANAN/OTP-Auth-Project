@@ -8,14 +8,14 @@ class CustomUserAdmin(admin.ModelAdmin):
         'name',
         'email',
         'phone',
-        'role',          # ← add this
+        'role',         
         'is_verified',
         'is_active',
         'created_at',
         'last_login'
     ]
     list_filter = [
-        'role',          # ← add this
+        'role',          
         'is_verified',
         'is_active',
     ]
@@ -49,3 +49,11 @@ class OTPTokenAdmin(admin.ModelAdmin):
     ordering = ['-created_at']
     readonly_fields = ['created_at']
     list_per_page = 20
+
+from .models import SavedProperty
+
+@admin.register(SavedProperty)
+class SavedPropertyAdmin(admin.ModelAdmin):
+    list_display = ['user', 'title', 'location', 'price', 'saved_at']
+    search_fields = ['user__email', 'title']
+    ordering = ['-saved_at']

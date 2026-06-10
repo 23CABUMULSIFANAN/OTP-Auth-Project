@@ -53,3 +53,19 @@ class OTPToken(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.otp_code}"
+    
+class SavedProperty(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='saved_properties')
+    property_id = models.IntegerField()
+    title = models.CharField(max_length=200)
+    location = models.CharField(max_length=200)
+    price = models.CharField(max_length=100)
+    status = models.CharField(max_length=50)
+    image = models.URLField()
+    saved_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['user', 'property_id']
+
+    def __str__(self):
+        return f"{self.user.email} - {self.title}"
