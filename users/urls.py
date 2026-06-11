@@ -1,20 +1,15 @@
 from django.urls import path
 from .views import (
-    RegisterView,
-    VerifyOTPView,
-    LoginView,
-    DashboardView,
-    UserDashboardView,
-    PropertyView,
-    AllUsersView,
-    SavePropertyView,
-    GetSavedPropertiesView,
-    UserPropertyView
+    RegisterView, VerifyOTPView, LoginView,
+    DashboardView, UserDashboardView, PropertyView,
+    AllUsersView, SavePropertyView, GetSavedPropertiesView,
+    UserPropertyView, AllPropertiesView, ResendOTPView
 )
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('verify-otp/', VerifyOTPView.as_view(), name='verify-otp'),
+    path('resend-otp/', ResendOTPView.as_view(), name='resend-otp'),
     path('login/', LoginView.as_view(), name='login'),
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
     path('user-dashboard/', UserDashboardView.as_view(), name='user-dashboard'),
@@ -23,4 +18,5 @@ urlpatterns = [
     path('save-property/', SavePropertyView.as_view(), name='save-property'),
     path('saved-properties/', GetSavedPropertiesView.as_view(), name='saved-properties'),
     path('user-properties/', UserPropertyView.as_view(), name='user-properties'),
+    path('all-properties/', AllPropertiesView.as_view(), name='all-properties'),
 ]

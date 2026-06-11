@@ -331,3 +331,50 @@ class UserPropertyView(APIView):
                 {"error": "Property not found"},
                 status=status_code.HTTP_404_NOT_FOUND
             )
+class AllPropertiesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Everyone can see all properties
+        properties = UserProperty.objects.all().order_by('-created_at')
+        data = [{
+            "id": p.id,
+            "title": p.title,
+            "location": p.location,
+            "price": p.price,
+            "property_type": p.property_type,
+            "status": p.status,
+            "beds": p.beds,
+            "baths": p.baths,
+            "sqft": p.sqft,
+            "image_url": p.image_url,
+            "owner": p.user.email,
+            "created_at": str(p.created_at),
+        } for p in properties]
+        return Response({"properties": data}, status=status_code.HTTP_200_OK)
+    
+class ResendOTPView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        try:
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            return Response(
+                {"error": "User not found"},
+                status=status_code.HTTP_404_NOT_FOUND
+            )
+
+        if user.is_verified:
+            return Response(
+                {"error": "Account already verified.", "redirect": "login"},
+                status=status_code.HTTP_400_BAD_REQUEST
+            )
+
+        thread = threading.Thread(target=send_otp_email, args=(user,))
+        thread.daemon = True
+        thread.start()
+
+        return Response(
+            {"message": "OTP resent successfully. Please check spam folder too."},
+            status=status_code.HTTP_200_OK
+        )
